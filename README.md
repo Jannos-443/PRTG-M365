@@ -26,7 +26,7 @@ or follow this Guide: [Paessler M365 Credentials](https://kb.paessler.com/en/top
    - EXE/Script = PRTG-M365-SKU.ps1
    - Parameter = "-ApplicationID 'Test-APPID' -TenatDomainName 'contoso.onmicrosoft.com' -AccessSecret 'Test-AppSecret' -SKUPattern '(Enterprisepack|EMS|ATP_ENTERPRISE)'
 
-
+4. Set your own Channel limits if needed
 
 ## Examples
 ![PRTG-M365-SKU](media/M365-SKU-OK.png)
