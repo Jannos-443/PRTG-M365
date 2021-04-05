@@ -23,8 +23,8 @@ Monitors Microsoft 365 License usage
 or follow this Guide: [Paessler M365 Credentials](https://kb.paessler.com/en/topic/88462-how-do-i-obtain-credentials-and-set-permissions-for-the-microsoft-365-sensors)
 
 3. Create new Sensor 
-   - EXE/Script = PRTG-M365-SKU.ps1
-   - Parameter = -ApplicationID 'Test-APPID' -TenatDomainName 'contoso.onmicrosoft.com' -AccessSecret 'Test-AppSecret' -SKUPattern '(Enterprisepack|EMS|ATP_ENTERPRISE)'
+   - EXE/Script = `PRTG-M365-SKU.ps1`
+   - Parameter = `-ApplicationID 'Test-APPID' -TenatDomainName 'contoso.onmicrosoft.com' -AccessSecret 'Test-AppSecret' -SKUPattern '(Enterprisepack|EMS|ATP_ENTERPRISE)'`
 
 4. Set your own Channel limits if needed
 
@@ -33,7 +33,7 @@ Exclude/Include Examples:
 
 | Parameter | Description |
 | --- | --- |
-| without -SKUPattern | displays all Lics with at least 1 License |
+| **without** -SKUPattern | displays all Lics with at least 1 License |
 | -SKUPattern '(Enterprisepack\|EMS\|ATP_ENTERPRISE)' | Includes only "O365 E3" (Enterprisepack) and "EMS" (EMS) |
 | -SKUPattern '(Enterprisepack\|EMS\|ATP_ENTERPRISE)' -exclude | Includes all but  "O365 E3" (Enterprisepack) and "EMS" (EMS) |
 
