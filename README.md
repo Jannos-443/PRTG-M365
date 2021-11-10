@@ -23,7 +23,7 @@ Monitors Microsoft 365 License usage
 or follow this Guide: [Paessler M365 Credentials](https://kb.paessler.com/en/topic/88462-how-do-i-obtain-credentials-and-set-permissions-for-the-microsoft-365-sensors)
 
 3. Create new Sensor 
-   - EXE/Script = `PRTG-M365-SKU.ps1`
+   - EXE/Script Advanced = `PRTG-M365-SKU.ps1`
    - Parameter = `-ApplicationID 'Test-APPID' -TenatDomainName 'contoso.onmicrosoft.com' -AccessSecret 'Test-AppSecret' -SKUPattern '(Enterprisepack|EMS|ATP_ENTERPRISE)'`
 
 4. Set your own Channel limits if needed
