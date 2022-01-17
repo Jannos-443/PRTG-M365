@@ -1,18 +1,19 @@
-# PRTG-M365-SKU
-# About
+<!-- ABOUT THE PROJECT -->
+### About The Project
+Project Owner: Jannos-443
 
-## Project Owner:
+PRTG Powershell Script to monitor Microsoft 365 license usage
 
-Jannos-443
+Free and open source: [MIT License](https://github.com/Jannos-443/PRTG-M365/blob/main/LICENSE)
 
-## Project Details
-
-Monitors Microsoft 365 License usage
-
+**Features**
+* Microsoft 365 License usage
+* Last Azure AD Sync
+* Group Based Licencing Error
 
 ## HOW TO
 
-1. Place `PRTG-M365-SKU.ps1` under `C:\Program Files (x86)\PRTG Network Monitor\Custom Sensors\EXEXML`
+1. Place `PRTG-M365-Licences.ps1` under `C:\Program Files (x86)\PRTG Network Monitor\Custom Sensors\EXEXML`
 
 2. Create AzureAD App
    - Open Azure AD
@@ -23,24 +24,41 @@ Monitors Microsoft 365 License usage
 or follow this Guide: [Paessler M365 Credentials](https://kb.paessler.com/en/topic/88462-how-do-i-obtain-credentials-and-set-permissions-for-the-microsoft-365-sensors)
 
 3. Create new Sensor 
-   - EXE/Script Advanced = `PRTG-M365-SKU.ps1`
-   - Parameter = `-ApplicationID 'Test-APPID' -TenatDomainName 'contoso.onmicrosoft.com' -AccessSecret 'Test-AppSecret' -SKUPattern '(Enterprisepack|EMS|ATP_ENTERPRISE)'`
+   - EXE/Script Advanced = `PRTG-M365-Licences.ps1`
+   - Parameter = `-ApplicationID 'Test-APPID' -TenatDomainName 'contoso.onmicrosoft.com' -AccessSecret 'Test-AppSecret' -SKUPattern '^(Enterprisepack|EMS|ATP_ENTERPRISE)$'`
 
 4. Set your own Channel limits if needed
 
-## Examples
-Exclude/Include Examples:
+## Usage
 
-| Parameter | Description |
-| --- | --- |
-| **without** -SKUPattern | displays all Lics with at least 1 License |
-| -SKUPattern '(Enterprisepack\|EMS\|ATP_ENTERPRISE)' | Includes only "O365 E3" (Enterprisepack) and "EMS" (EMS) |
-| -SKUPattern '(Enterprisepack\|EMS\|ATP_ENTERPRISE)' -exclude | Includes all but  "O365 E3" (Enterprisepack) and "EMS" (EMS) |
+```powershell
+-ApplicationID 'xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' -TenatDomainName 'contoso.onmicrosoft.com' -AccessSecret 'YourSecretKey' -SKUPattern '(Enterprisepack|EMS|ATP_ENTERPRISE|VISIOCLIENT|PROJECTPROFESSIONAL|DYN365_ENTERPRISE_SALES|DYN365_TEAM_MEMBERS|D365_CUSTOMER_SERVICE_ENT_ATTACH)'
+```
+Full example PRTG parameters
+
+```powershell
+... -SKUPattern '^(Enterprisepack\|EMS\|ATP_ENTERPRISE)$'
+```
+Includes only "O365 E3" (Enterprisepack) and "EMS" (EMS)
+
+```powershell
+... -SKUPattern '^(Enterprisepack\|EMS\|ATP_ENTERPRISE)$' -exclude
+```
+Includes all but  "O365 E3" (Enterprisepack) and "EMS" (EMS)
+
+```powershell
+**without** -SKUPattern 
+```
+ displays all Lics with at least 1 License
 
 
 Example Output:
 
-![PRTG-M365-SKU](media/M365-SKU-OK.png)
+![PRTG-M365-Licences](media/ok.png)
+
+
+![PRTG-M365-Licences](media/error.png)
+
 
 SKUPattern
 ------------------
