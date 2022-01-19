@@ -15,7 +15,7 @@ Free and open source: [MIT License](https://github.com/Jannos-443/PRTG-M365/blob
 
 1. Create Azure AD Application and Assign Exchange.ManageAsApp Permission
 - Add Application to Global Readers Azure AD Role
-- Guide: [Microsoft Exchange App Only Auth Powershell]https://docs.microsoft.com/en-us/powershell/exchange/app-only-auth-powershell-v2?view=exchange-ps#set-up-app-only-authentication
+- Guide: [Microsoft Exchange App Only Auth Powershell](https://docs.microsoft.com/en-us/powershell/exchange/app-only-auth-powershell-v2?view=exchange-ps#set-up-app-only-authentication)
 
 2. Place `PRTG-M365-QuarantineMessages.ps1` under `C:\Program Files (x86)\PRTG Network Monitor\Custom Sensors\EXEXML`
 
