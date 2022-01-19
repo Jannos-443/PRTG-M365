@@ -2,9 +2,12 @@
 ### About The Project
 Project Owner: Jannos-443
 
+Free and open source: [MIT License](https://github.com/Jannos-443/PRTG-M365/blob/main/LICENSE)
+
+<br>
+
 PRTG Powershell Scripts to monitor Microsoft 365
 
-Free and open source: 
 
 ### **Features**
 
@@ -18,4 +21,4 @@ Free and open source:
 
 <br>
 
-**click link and read documentation**
+**Click link and read documentation**
