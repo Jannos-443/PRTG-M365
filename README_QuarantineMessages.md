@@ -37,7 +37,7 @@ Using Self Signed Certificate in placed on PRTG Server(s)
 Using Self Signed Certificate imported in Cert Store
 
 
-Example Output:
+## Example Output
 
 ![PRTG-M365](media/quarantine_ok.png)
 
