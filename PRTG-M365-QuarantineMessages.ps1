@@ -39,12 +39,12 @@ trap{
 <#
 #https://stackoverflow.com/questions/19055924/how-to-launch-64-bit-powershell-from-32-bit-cmd-exe
 #############################################################################
-#If Powershell is running the 32-bit version on a 64-bit machine, we 
+#If Powershell is running the 32-bit version on a 64-bit machine, we
 #need to force powershell to run in 64-bit mode .
 #############################################################################
-if ($env:PROCESSOR_ARCHITEW6432 -eq "AMD64") 
+if ($env:PROCESSOR_ARCHITEW6432 -eq "AMD64")
     {
-    if ($myInvocation.Line) 
+    if ($myInvocation.Line)
         {
         [string]$output = &"$env:WINDIR\sysnative\windowspowershell\v1.0\powershell.exe" -NonInteractive -NoProfile $myInvocation.Line
         }
@@ -88,7 +88,7 @@ if("" -eq $CertificateThumbPrint)
         Throw "`$CertificateFilePath+`$CertificatePassword or `$CertificateThumbPrint is needed"
         }
     }
-else 
+else
     {
     if(("" -ne $CertificatePassword) -or ("" -ne $CertificateFilePath))
         {
@@ -110,7 +110,7 @@ $ErrorActionPreference = "Stop"
 # Import ExchangeOnlineManagement module
 try {
     Import-Module "ExchangeOnlineManagement" -ErrorAction Stop
-    #Import-Module "C:\Program Files\WindowsPowerShell\Modules\ExchangeOnlineManagement\2.0.3\ExchangeOnlineManagement.psm1" -ErrorAction Stop     
+    #Import-Module "C:\Program Files\WindowsPowerShell\Modules\ExchangeOnlineManagement\2.0.3\ExchangeOnlineManagement.psm1" -ErrorAction Stop
 } catch {
     Write-Output "<prtg>"
     Write-Output " <error>1</error>"
@@ -135,7 +135,7 @@ try {
         {
         $null = Connect-ExchangeOnline -CertificateThumbPrint $CertificateThumbPrint -AppId $ApplicationID -Organization $TenatDomainName
         }
-    
+
     if($CertificateFilePath)
         {
         $null = Connect-ExchangeOnline -CertificateFilePath $CertificateFilePath -CertificatePassword (ConvertTo-SecureString -String $CertificatePassword -AsPlainText -Force) -AppId $ApplicationID -Organization $TenatDomainName
@@ -144,7 +144,7 @@ try {
     Write-Output "connected successfully"
     Start-Sleep -Seconds 1
     }
- 
+
 catch
     {
     Write-Output "<prtg>"
@@ -157,17 +157,20 @@ catch
 # Get Quarantine Messages last 30 Days
 $QuaraMails = Get-QuarantineMessage -StartReceivedDate (Get-Date).AddDays(-$daysago)
 
+# Exclude already Released Mails
+$QuaraNeedsReview = $QuaraMails | Where-Object {$_.ReleaseStatus -eq "NOTRELEASED"}
+
 # Count
-$QuaraMailsCount = 0
+$QuaraMailsCount = ($QuaraMails | Measure-Object).count
+$QuaraNeedsReviewCount = ($QuaraNeedsReview | Measure-Object).count
 $QuaraMailsText = ""
 
 # hardcoded list that applies to all hosts
-$IgnoreScript = '^(TestServer123:E:\\)$' 
+$IgnoreScript = '^(TestServer123:E:\\)$'
 # \ has to be Escaped with another \
 
-ForEach ($QuaraMail in $QuaraMails)
+ForEach ($QuaraMail in $QuaraNeedsReview)
     {
-    $QuaraMailsCount ++
     $dateoutput = (Get-Date -Date $QuaraMail.ReceivedTime -Format "dd.MM.yy-HH:mm").ToString()
     $QuaraMailsText += "Time: $($dateoutput) Direction: $($QuaraMail.Direction) Sender: $($QuaraMail.SenderAddress) Type: $($QuaraMail.Type)###"
     }
@@ -196,12 +199,18 @@ if ($QuaraMailsCount -gt 0)
 
 $xmlOutput = $xmlOutput + "<result>
         <channel>QuaraMailsCount</channel>
-        <value>$QuaraMailsCount</value>
+        <value>$($QuaraMailsCount)</value>
+        <unit>Count</unit>
+        </result>
+        <result>
+        <channel>Needs review</channel>
+        <value>$($QuaraNeedsReviewCount)</value>
         <unit>Count</unit>
         <limitmode>1</limitmode>
-        <LimitMaxError>0</LimitMaxError>
-        </result>"   
-        
+        <LimitMaxWarning>0</LimitMaxWarning>
+        <LimitMaxError>25</LimitMaxError>
+        </result>"
+
 
 
 $xmlOutput = $xmlOutput + "</prtg>"

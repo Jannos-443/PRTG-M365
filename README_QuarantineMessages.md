@@ -39,7 +39,4 @@ Using Self Signed Certificate imported in Cert Store
 
 ## Example Output
 
-![PRTG-M365](media/quarantine_ok.png)
-
-
-![PRTG-M365](media/quarantine_error.png)
+![PRTG-M365](media/quarantine_warning.png)
