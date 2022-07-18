@@ -1,10 +1,9 @@
 <#   
     .SYNOPSIS
-    Monitors Microsoft 365 License usage using Microsoft Graph API
+    Monitors Microsoft 365 App Secret expiration
 
     .DESCRIPTION
-    Using MS Graph this Script shows the Microsoft 365 License usage
-    You can display all licenses, include only some or exclude some.
+    Using MS Graph this Script shows the Microsoft 365 App Secret expiration
 
     Copy this script to the PRTG probe EXEXML scripts folder (${env:ProgramFiles(x86)}\PRTG Network Monitor\Custom Sensors\EXEXML)
     and create a "EXE/Script Advanced. Choose this script from the dropdown and set at least:
@@ -21,35 +20,17 @@
     .PARAMETER AccessSecret
     Provide the Application Secret
 
-    .PARAMETER exclude
-    true = exclude $SKUPattern SKUs
-    false (default) = only include $SKUPattern SKUs
-
-    .PARAMETER SKUPattern
-    Regular expression to select the SKUs
-
-    without "-exclude"
-        Example: '^(Enterprisepack)$' includes only Enterprisepack (Office 365 E3)
-        Example2: '^(Enterprisepack|EMS)$' includes only Enterprisepack (Office 365 E3) and EMS (Enterprise Mobility + Security)
-
-    with "-exclude"
-        Example: '^(Enterprisepack)$' includes all but Enterprisepack (Office 365 E3)
-        Example2: '^(Enterprisepack|EMS)$' includes all but Enterprisepack (Office 365 E3) and EMS (Enterprise Mobility + Security)
-    
-    Regular Expression: https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_regular_expressions?view=powershell-7.1
-    License Names: https://docs.microsoft.com/en-us/azure/active-directory/enterprise-users/licensing-service-plan-reference
-
     .EXAMPLE
     Sample call from PRTG EXE/Script Advanced
 
-    "PRTG-M365-Licences.ps1" -ApplicationID 'Test-APPID' -TenatDomainName 'contoso.onmicrosoft.com' -AccessSecret 'Test-AppSecret' -SKUPattern '^(Enterprisepack|EMS|ATP_ENTERPRISE)$'
+    "PRTG-M365-AppSecrets.ps1" -ApplicationID 'Test-APPID' -TenatDomainName 'contoso.onmicrosoft.com' -AccessSecret 'Test-AppSecret'
 
     Microsoft 365 Permission:
         1. Open Azure AD
         2. Register new APP
         3. Overview >> Get Application ID 
-        4. Set API Permissions >> MS Graph >> Application >> Organization.Read.All
-        5. Certificates & secrets >> new Secret >> unlimited
+        4. Set API Permissions >> MS Graph >> Application >> Application.Read.All
+        5. Certificates & secrets >> new Secret
 
     Author:  Jannos-443
     https://github.com/Jannos-443/PRTG-M365
@@ -142,7 +123,6 @@ $xmlOutput = '<prtg>'
 Function GraphCall($URL) {
     #MS Graph Request
     try {
-        #Get All SKUs
         $Headers = @{Authorization = "$($ConnectGraph.token_type) $($ConnectGraph.access_token)" }
         $GraphUrl = $URL
         $Result_Part = Invoke-RestMethod -Headers $Headers -Uri $GraphUrl -Method Get

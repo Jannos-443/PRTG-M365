@@ -49,7 +49,7 @@
         2. Register new APP
         3. Overview >> Get Application ID 
         4. Set API Permissions >> MS Graph >> Application >> Organization.Read.All
-        5. Certificates & secrets >> new Secret >> unlimited
+        5. Certificates & secrets >> new Secret
 
     Author:  Jannos-443
     https://github.com/Jannos-443/PRTG-M365
@@ -159,7 +159,6 @@ Function GraphCall($URL)
     #MS Graph Request
     try 
         {
-        #Get All SKUs
         $Headers = @{Authorization = "$($ConnectGraph.token_type) $($ConnectGraph.access_token)"}
         $GraphUrl = $URL
         $Result_Part = Invoke-RestMethod -Headers $Headers -Uri $GraphUrl -Method Get

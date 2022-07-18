@@ -19,6 +19,11 @@ PRTG Powershell Scripts to monitor Microsoft 365
 [PRTG-M365-QuarantineMessages](https://github.com/Jannos-443/PRTG-M365/blob/main/README_QuarantineMessages.md)
 * Monitor Exchange Quarantine Messages
 
+[PRTG-M365-AppSecrets](https://github.com/Jannos-443/PRTG-M365/blob/main/README_AppSecrets.md)
+* Monitor Office365 Application Secret expiration
+* Certs expiration
+* Passwords expiration
+
 <br>
 
 **Click link and read documentation**

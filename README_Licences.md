@@ -20,7 +20,7 @@ Free and open source: [MIT License](https://github.com/Jannos-443/PRTG-M365/blob
    - Register new APP
    - Overview >> Get Application ID 
    - Set API Permissions >> MS Graph >> Application >> Organization.Read.All
-   - Certificates & secrets >> new Secret >> unlimited
+   - Certificates & secrets >> new Secret
 or follow this Guide: [Paessler M365 Credentials](https://kb.paessler.com/en/topic/88462-how-do-i-obtain-credentials-and-set-permissions-for-the-microsoft-365-sensors)
 
 3. Create new Sensor 
