@@ -1,4 +1,4 @@
-<#   
+<#
     .SYNOPSIS
     Monitors Microsoft 365 App Secret expiration
 
@@ -20,6 +20,15 @@
     .PARAMETER AccessSecret
     Provide the Application Secret
 
+    .PARAMETER Exclude/Include
+    Regular expression to exclude secrets on DisplayName or AppName
+
+    Example: ^(PRTG-APP)$
+
+    Example2: ^(PRTG-.*|TestApp123)$ excludes PRTG-* and TestApp123
+
+    #https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_regular_expressions?view=powershell-7.1
+
     .EXAMPLE
     Sample call from PRTG EXE/Script Advanced
 
@@ -28,7 +37,7 @@
     Microsoft 365 Permission:
         1. Open Azure AD
         2. Register new APP
-        3. Overview >> Get Application ID 
+        3. Overview >> Get Application ID
         4. Set API Permissions >> MS Graph >> Application >> Application.Read.All
         5. Certificates & secrets >> new Secret
 
@@ -38,7 +47,11 @@
 param(
     [string] $TenatDomainName = '',
     [string] $ApplicationID = '',
-    [string] $AccessSecret = ''
+    [string] $AccessSecret = '',
+    [string] $IncludeSecretName = '',
+    [string] $ExcludeSecretName = '',
+    [string] $IncludeAppName = '',
+    [string] $ExcludeAppName = ''
 )
 
 #Catch all unhandled Errors
@@ -94,21 +107,21 @@ try {
 
     if ($renew) {
         #Request Token
-        $Body = @{    
+        $Body = @{
             Grant_Type    = "client_credentials"
             Scope         = "https://graph.microsoft.com/.default"
             client_Id     = $ApplicationID
             Client_Secret = $AccessSecret
-        } 
-  
+        }
+
         $ConnectGraph = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$TenatDomainName/oauth2/v2.0/token" -Method POST -Body $Body
         $token = $ConnectGraph.access_token
         $tokenexpire = (Get-Date).AddSeconds($ConnectGraph.expires_in)
 
         Write-Host "sucessfully got new MS Graph Token"
     }
-} 
-    
+}
+
 catch {
     Write-Output "<prtg>"
     Write-Output " <error>1</error>"
@@ -132,7 +145,7 @@ Function GraphCall($URL) {
             $Result_Part = Invoke-RestMethod -Headers $Headers -Uri $GraphUrl -Method Get
             $Result = $Result + $Result_Part.value
         }
-    } 
+    }
 
     catch {
         Write-Output "<prtg>"
@@ -161,7 +174,7 @@ foreach ($SingleResult in $Result) {
         }
         $null = $SecretList.Add($object)
     }
-    
+
     foreach ($keyCredential in $SingleResult.keyCredentials) {
         [datetime]$ExpireTime = $keyCredential.endDateTime
         $object = [PSCustomObject]@{
@@ -173,6 +186,25 @@ foreach ($SingleResult in $Result) {
         $null = $SecretList.Add($object)
     }
 }
+
+#Region Filter
+#APP
+if ($ExcludeAppName -ne "") {
+    $SecretList = $SecretList | Where-Object {$_.AppDisplayname -notmatch $ExcludeAppName}
+}
+
+if ($IncludeAppName -ne "") {
+    $SecretList = $SecretList | Where-Object {$_.AppDisplayname -match $IncludeAppName}
+}
+#SECRET
+if ($ExcludeSecretName -ne "") {
+    $SecretList = $SecretList | Where-Object {$_.SecretDisplayname -notmatch $ExcludeSecretName}
+}
+
+if ($IncludeSecretName -ne "") {
+    $SecretList = $SecretList | Where-Object {$_.SecretDisplayname -match $IncludeSecretName}
+}
+#End Region Filter
 
 $ListCount = ($SecretList | Measure-Object).Count
 if ($ListCount -eq 0) {
@@ -189,7 +221,7 @@ $Top5 = $SecretList | Select-Object -First 5
 $OutputText = "Next to expire: "
 
 foreach ($Top in $Top5) {
-    $OutputText += "App($($Top.AppDisplayname)) Secret($($Top.SecretDisplayname)) Days($($Top.DaysLeft)); "
+    $OutputText += "App `"$($Top.AppDisplayname)`" Secret `"$($Top.SecretDisplayname)`" expires in $($Top.DaysLeft)d; "
 }
 
 #Next Expiration
