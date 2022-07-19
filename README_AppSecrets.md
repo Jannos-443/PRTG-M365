@@ -30,6 +30,10 @@ or follow this Guide: [Paessler M365 Credentials](https://kb.paessler.com/en/top
 ## Usage
 
 ```powershell
+-ApplicationID 'Test-APPID' -TenatDomainName 'contoso.onmicrosoft.com' -AccessSecret 'Test-AppSecret'
+```
+
+```powershell
 -ApplicationID 'Test-APPID' -TenatDomainName 'contoso.onmicrosoft.com' -AccessSecret 'Test-AppSecret' -ExcludeAppName '^(Test-PRTG-APP)$'
 ```
 
