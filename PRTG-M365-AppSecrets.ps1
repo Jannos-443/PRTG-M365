@@ -68,6 +68,10 @@ trap {
     Exit
 }
 
+#region set TLS to 1.2
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+#endregion
+
 if (($TenatDomainName -eq "") -or ($Null -eq $TenatDomainName)) {
     Throw "TenantDomainName Variable is empty"
 }
@@ -190,19 +194,19 @@ foreach ($SingleResult in $Result) {
 #Region Filter
 #APP
 if ($ExcludeAppName -ne "") {
-    $SecretList = $SecretList | Where-Object {$_.AppDisplayname -notmatch $ExcludeAppName}
+    $SecretList = $SecretList | Where-Object { $_.AppDisplayname -notmatch $ExcludeAppName }
 }
 
 if ($IncludeAppName -ne "") {
-    $SecretList = $SecretList | Where-Object {$_.AppDisplayname -match $IncludeAppName}
+    $SecretList = $SecretList | Where-Object { $_.AppDisplayname -match $IncludeAppName }
 }
 #SECRET
 if ($ExcludeSecretName -ne "") {
-    $SecretList = $SecretList | Where-Object {$_.SecretDisplayname -notmatch $ExcludeSecretName}
+    $SecretList = $SecretList | Where-Object { $_.SecretDisplayname -notmatch $ExcludeSecretName }
 }
 
 if ($IncludeSecretName -ne "") {
-    $SecretList = $SecretList | Where-Object {$_.SecretDisplayname -match $IncludeSecretName}
+    $SecretList = $SecretList | Where-Object { $_.SecretDisplayname -match $IncludeSecretName }
 }
 #End Region Filter
 

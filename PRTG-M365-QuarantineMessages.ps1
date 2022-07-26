@@ -8,28 +8,23 @@ param(
 )
 
 #Catch all unhandled Errors
-trap{
-    if($connected)
-        {
-        try
-            {
+trap {
+    if ($connected) {
+        try {
             $null = Disconnect-ExchangeOnline -Confirm:$false -ErrorAction SilentlyContinue
-            }
-        catch
-            {
-            }
         }
+        catch {
+        }
+    }
     $Output = "line:$($_.InvocationInfo.ScriptLineNumber.ToString()) char:$($_.InvocationInfo.OffsetInLine.ToString()) --- message: $($_.Exception.Message.ToString()) --- line: $($_.InvocationInfo.Line.ToString()) "
-    $Output = $Output.Replace("<","")
-    $Output = $Output.Replace(">","")
-    $Output = $Output.Replace("#","")
-    try
-        {
-        $Output = $Output.Substring(0,2000)
-        }
-    catch
-        {
-        }
+    $Output = $Output.Replace("<", "")
+    $Output = $Output.Replace(">", "")
+    $Output = $Output.Replace("#", "")
+    try {
+        $Output = $Output.Substring(0, 2000)
+    }
+    catch {
+    }
     Write-Output "<prtg>"
     Write-Output "<error>1</error>"
     Write-Output "<text>$Output</text>"
@@ -70,38 +65,31 @@ if ($env:PROCESSOR_ARCHITEW6432 -eq "AMD64")
 #End
 #############################################################################
 #>
-if(($TenatDomainName -notlike "*.onmicrosoft.com") -or ($null -eq $TenatDomainName))
-    {
+if (($TenatDomainName -notlike "*.onmicrosoft.com") -or ($null -eq $TenatDomainName)) {
     Throw "TenantDomainName Variable does not end *.onmicrosoft.com"
-    }
+}
 
-if(($ApplicationID -eq "") -or ($Null -eq $ApplicationID))
-    {
+if (($ApplicationID -eq "") -or ($Null -eq $ApplicationID)) {
     Throw "ApplicationID Variable is empty"
-    }
+}
 
 #Check Authentication Requirements
-if("" -eq $CertificateThumbPrint)
-    {
-    if(("" -eq $CertificatePassword) -or ("" -eq $CertificateFilePath))
-        {
+if ("" -eq $CertificateThumbPrint) {
+    if (("" -eq $CertificatePassword) -or ("" -eq $CertificateFilePath)) {
         Throw "`$CertificateFilePath+`$CertificatePassword or `$CertificateThumbPrint is needed"
-        }
     }
-else
-    {
-    if(("" -ne $CertificatePassword) -or ("" -ne $CertificateFilePath))
-        {
+}
+else {
+    if (("" -ne $CertificatePassword) -or ("" -ne $CertificateFilePath)) {
         Throw "Use ether `$CertificateFilePath or `$CertificateThumbPrint. Not both"
-        }
-    else
-        {
+    }
+    else {
         Test-Path (-not $CertificateFilePath)
-            {
+        {
             Throw "Cert not found under Path $($CertificateFilePath)"
-            }
         }
     }
+}
 
 # Error if there's anything going on
 $ErrorActionPreference = "Stop"
@@ -111,7 +99,8 @@ $ErrorActionPreference = "Stop"
 try {
     Import-Module "ExchangeOnlineManagement" -ErrorAction Stop
     #Import-Module "C:\Program Files\WindowsPowerShell\Modules\ExchangeOnlineManagement\2.0.3\ExchangeOnlineManagement.psm1" -ErrorAction Stop
-} catch {
+}
+catch {
     Write-Output "<prtg>"
     Write-Output " <error>1</error>"
     Write-Output " <text>Error Loading ExchangeOnlineManagement Powershell Module ($($_.Exception.Message))</text>"
@@ -121,44 +110,39 @@ try {
 
 # Disconnect hanging Session if available
 $connected = $false
-try
-    {
+try {
     $null = Disconnect-ExchangeOnline -Confirm:$false -ErrorAction SilentlyContinue
-    }
-catch
-    {
-    }
+}
+catch {
+}
 
 # Connect to EXO
 try {
-    if($CertificateThumbPrint)
-        {
+    if ($CertificateThumbPrint) {
         $null = Connect-ExchangeOnline -CertificateThumbPrint $CertificateThumbPrint -AppId $ApplicationID -Organization $TenatDomainName
-        }
+    }
 
-    if($CertificateFilePath)
-        {
+    if ($CertificateFilePath) {
         $null = Connect-ExchangeOnline -CertificateFilePath $CertificateFilePath -CertificatePassword (ConvertTo-SecureString -String $CertificatePassword -AsPlainText -Force) -AppId $ApplicationID -Organization $TenatDomainName
-        }
+    }
     $connected = $true
     Write-Output "connected successfully"
     Start-Sleep -Seconds 1
-    }
+}
 
-catch
-    {
+catch {
     Write-Output "<prtg>"
     Write-Output " <error>1</error>"
     Write-Output " <text>Could not connect to EXO. Error: $($_.Exception.Message)</text>"
     Write-Output "</prtg>"
     Exit
-    }
+}
 
 # Get Quarantine Messages last 30 Days
 $QuaraMails = Get-QuarantineMessage -StartReceivedDate (Get-Date).AddDays(-$daysago)
 
 # Exclude already Released Mails
-$QuaraNeedsReview = $QuaraMails | Where-Object {$_.ReleaseStatus -eq "NOTRELEASED"}
+$QuaraNeedsReview = $QuaraMails | Where-Object { $_.ReleaseStatus -eq "NOTRELEASED" }
 
 # Count
 $QuaraMailsCount = ($QuaraMails | Measure-Object).count
@@ -169,20 +153,17 @@ $QuaraMailsText = ""
 $IgnoreScript = '^(TestServer123:E:\\)$'
 # \ has to be Escaped with another \
 
-ForEach ($QuaraMail in $QuaraNeedsReview)
-    {
+ForEach ($QuaraMail in $QuaraNeedsReview) {
     $dateoutput = (Get-Date -Date $QuaraMail.ReceivedTime -Format "dd.MM.yy-HH:mm").ToString()
     $QuaraMailsText += "Time: $($dateoutput) Direction: $($QuaraMail.Direction) Sender: $($QuaraMail.SenderAddress) Type: $($QuaraMail.Type)###"
-    }
-$QuaraMailsText = $QuaraMailsText.Insert(0,"QuarantineMessages: $($QuaraMailsCount) - ")
+}
+$QuaraMailsText = $QuaraMailsText.Insert(0, "QuarantineMessages: $($QuaraMailsCount) - ")
 
-try
-    {
-    $QuaraMailsText = $QuaraMailsText.Substring(0,2000)
-    }
-catch
-    {
-    }
+try {
+    $QuaraMailsText = $QuaraMailsText.Substring(0, 2000)
+}
+catch {
+}
 
 # Disconnect from EXO
 Disconnect-ExchangeOnline -Confirm:$false
@@ -191,10 +172,9 @@ $connected = $false
 
 # Results
 $xmlOutput = '<prtg>'
-if ($QuaraMailsCount -gt 0)
-    {
+if ($QuaraMailsCount -gt 0) {
     $xmlOutput = $xmlOutput + "<text>$($QuaraMailsText)</text>"
-    }
+}
 
 
 $xmlOutput = $xmlOutput + "<result>
