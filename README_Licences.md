@@ -37,17 +37,17 @@ Show all Lics with at least 1 License
 -ApplicationID 'xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' -TenatDomainName 'contoso.onmicrosoft.com' -AccessSecret 'YourSecretKey'
 ```
 
-Show Enterprisepack, EMS, ATP, VISIO, PROJECT and DYNAMICS Licenses
+Include Enterprisepack, EMS, ATP, VISIO, PROJECT and DYNAMICS Licenses
 ```powershell
 ... -SKUPattern '(Enterprisepack|EMS|ATP_ENTERPRISE|VISIOCLIENT|PROJECTPROFESSIONAL|DYN365_ENTERPRISE_SALES|DYN365_TEAM_MEMBERS|D365_CUSTOMER_SERVICE_ENT_ATTACH)'
 ```
 
-Includes only "O365 E3" (Enterprisepack) and "EMS" (EMS)
+Include only "O365 E3" (Enterprisepack) and "EMS" (EMS)
 ```powershell
 ... -SKUPattern '^(Enterprisepack\|EMS\|ATP_ENTERPRISE)$'
 ```
 
-Includes all but  "O365 E3" (Enterprisepack) and "EMS" (EMS)
+Include all but "O365 E3" (Enterprisepack) and "EMS" (EMS)
 ```powershell
 ... -SKUPattern '^(Enterprisepack\|EMS\|ATP_ENTERPRISE)$' -exclude
 ```
