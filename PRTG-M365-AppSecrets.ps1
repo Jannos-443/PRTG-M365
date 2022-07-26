@@ -8,11 +8,11 @@
     Copy this script to the PRTG probe EXEXML scripts folder (${env:ProgramFiles(x86)}\PRTG Network Monitor\Custom Sensors\EXEXML)
     and create a "EXE/Script Advanced. Choose this script from the dropdown and set at least:
 
-    + Parameters: TenatDomainName, ApplicationID, AccessSecret
+    + Parameters: TenantID, ApplicationID, AccessSecret
     + Scanning Interval: minimum 15 minutes
 
-    .PARAMETER TenatDomainName
-    your Microsoft 365 TenantName for Example contoso.onmicrosoft.com
+    .PARAMETER TenantID
+    Provide the TenantID or TenantName (xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx or contoso.onmicrosoft.com)
 
     .PARAMETER ApplicationID
     Provide the ApplicationID
@@ -32,7 +32,7 @@
     .EXAMPLE
     Sample call from PRTG EXE/Script Advanced
 
-    "PRTG-M365-AppSecrets.ps1" -ApplicationID 'Test-APPID' -TenatDomainName 'contoso.onmicrosoft.com' -AccessSecret 'Test-AppSecret'
+    "PRTG-M365-AppSecrets.ps1" -ApplicationID 'Test-APPID' -TenantID 'contoso.onmicrosoft.com' -AccessSecret 'Test-AppSecret'
 
     Microsoft 365 Permission:
         1. Open Azure AD
@@ -45,7 +45,7 @@
     https://github.com/Jannos-443/PRTG-M365
 #>
 param(
-    [string] $TenatDomainName = '',
+    [string] $TenantID = '',
     [string] $ApplicationID = '',
     [string] $AccessSecret = '',
     [string] $IncludeSecretName = '',
@@ -72,8 +72,8 @@ trap {
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 #endregion
 
-if (($TenatDomainName -eq "") -or ($Null -eq $TenatDomainName)) {
-    Throw "TenantDomainName Variable is empty"
+if (($TenantID -eq "") -or ($Null -eq $TenantID)) {
+    Throw "TenantID Variable is empty"
 }
 
 if (($ApplicationID -eq "") -or ($Null -eq $ApplicationID)) {
@@ -118,7 +118,7 @@ try {
             Client_Secret = $AccessSecret
         }
 
-        $ConnectGraph = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$TenatDomainName/oauth2/v2.0/token" -Method POST -Body $Body
+        $ConnectGraph = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$TenantID/oauth2/v2.0/token" -Method POST -Body $Body
         $token = $ConnectGraph.access_token
         $tokenexpire = (Get-Date).AddSeconds($ConnectGraph.expires_in)
 

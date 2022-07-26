@@ -27,14 +27,14 @@ or follow this Guide: [Paessler M365 Credentials](https://kb.paessler.com/en/top
 
 3. Create new Sensor
    - EXE/Script Advanced = `PRTG-M365-Licences.ps1`
-   - Parameter = `-ApplicationID 'Test-APPID' -TenatDomainName 'contoso.onmicrosoft.com' -AccessSecret 'Test-AppSecret' -SKUPattern '^(Enterprisepack|EMS|ATP_ENTERPRISE)$'`
+   - Parameter = `-ApplicationID 'Test-APPID' -TenantID 'YourTenantID' -AccessSecret 'Test-AppSecret' -SKUPattern '^(Enterprisepack|EMS|ATP_ENTERPRISE)$'`
 
 4. Set your own Channel limits if needed
 
 ## Usage
 Show all Lics with at least 1 License
 ```powershell
--ApplicationID 'xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' -TenatDomainName 'contoso.onmicrosoft.com' -AccessSecret 'YourSecretKey'
+-ApplicationID 'xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' -TenantID 'YourTenantID' -AccessSecret 'YourSecretKey'
 ```
 
 Include Enterprisepack, EMS, ATP, VISIO, PROJECT and DYNAMICS Licenses

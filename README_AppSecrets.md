@@ -25,20 +25,20 @@ or follow this Guide: [Paessler M365 Credentials](https://kb.paessler.com/en/top
 
 3. Create new Sensor
    - EXE/Script Advanced = `PRTG-M365-AppSecrets.ps1`
-   - Parameter = `-ApplicationID 'Test-APPID' -TenatDomainName 'contoso.onmicrosoft.com' -AccessSecret 'Test-AppSecret'`
+   - Parameter = `-ApplicationID 'Test-APPID' -TenantID 'YourTenantID' -AccessSecret 'Test-AppSecret'`
 
 ## Usage
 
 ```powershell
--ApplicationID 'Test-APPID' -TenatDomainName 'contoso.onmicrosoft.com' -AccessSecret 'Test-AppSecret'
+-ApplicationID 'Test-APPID' -TenantID 'YourTenantID' -AccessSecret 'Test-AppSecret'
 ```
 
 ```powershell
--ApplicationID 'Test-APPID' -TenatDomainName 'contoso.onmicrosoft.com' -AccessSecret 'Test-AppSecret' -ExcludeAppName '^(Test-PRTG-APP)$'
+-ApplicationID 'Test-APPID' -TenantID 'YourTenantID' -AccessSecret 'Test-AppSecret' -ExcludeAppName '^(Test-PRTG-APP)$'
 ```
 
 ```powershell
--ApplicationID 'Test-APPID' -TenatDomainName 'contoso.onmicrosoft.com' -AccessSecret 'Test-AppSecret' -ExcludeSecretName '^(Test-PRTG-Secret)$'
+-ApplicationID 'Test-APPID' -TenantID 'YourTenantID' -AccessSecret 'Test-AppSecret' -ExcludeSecretName '^(Test-PRTG-Secret)$'
 ```
 
 ## Example Output:
