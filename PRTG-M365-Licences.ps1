@@ -187,7 +187,7 @@ if ($Hide_LastDirSync -eq $false) {
         $LastSyncTime = (((Get-Date).ToUniversalTime()) - ($DirSyncTime.ToUniversalTime())).TotalSeconds
         $LastSyncTime = [System.Math]::Round($LastSyncTime, 0)
 
-        $xmlOutput = $xmlOutput + "
+        $xmlOutput += "
             <result>
             <channel>LastDirSync</channel>
             <value>$($LastSyncTime)</value>
@@ -208,7 +208,7 @@ if ($Hide_GroupBasedLicence -eq $false) {
     foreach ($group in $Result) {
         $Errors = $null
         $Errors = GraphCall -URL "https://graph.microsoft.com/v1.0/groups/$($group.id)/membersWithLicenseErrors?`$select=licenseAssignmentStates"
-        $ErrorByGroup = ($Errors.licenseAssignmentStates | Where-Object { $_.assignedByGroup -eq $group.id}
+        $ErrorByGroup = $Errors.licenseAssignmentStates | Where-Object { $_.assignedByGroup -eq $group.id}
         foreach ($Error in $ErrorByGroup) {
             $LicenceErrorCount += 1
             
@@ -222,10 +222,10 @@ if ($Hide_GroupBasedLicence -eq $false) {
         }
     }
     if ($LicenceErrorCount -gt 0) {
-        $xmlOutput = $xmlOutput + "<text>$($LicenceText)</text>"
+        $xmlOutput += "<text>$($LicenceText)</text>"
     }
 
-    $xmlOutput = $xmlOutput + "
+    $xmlOutput += "
     <result>
     <channel>GroupBasedLicenceError</channel>
     <value>$($LicenceErrorCount)</value>
@@ -257,7 +257,7 @@ if ($Hide_LicenceCount -eq $false) {
     }
 
     foreach ($LIC in $Result) {
-        $xmlOutput = $xmlOutput + "
+        $xmlOutput += "
             <result>
             <channel>$($LIC.SkuPartNumber) - Free Licenses</channel>
             <value>$($LIC.PrepaidUnits.Enabled - $LIC.ConsumedUnits)</value>
@@ -273,6 +273,6 @@ if ($Hide_LicenceCount -eq $false) {
     }
 }
 
-$xmlOutput = $xmlOutput + "</prtg>"
+$xmlOutput += "</prtg>"
 
 $xmlOutput
