@@ -9,11 +9,11 @@ Free and open source: [MIT License](https://github.com/Jannos-443/PRTG-M365/blob
 **Features**
 * Microsoft 365 License usage
 * Last Azure AD Sync
-* Group Based Licencing Error
+* Group Based Licensing Error
 
 ## HOW TO
 
-1. Place `PRTG-M365-Licences.ps1` under `C:\Program Files (x86)\PRTG Network Monitor\Custom Sensors\EXEXML`
+1. Place `PRTG-M365-Licenses.ps1` under `C:\Program Files (x86)\PRTG Network Monitor\Custom Sensors\EXEXML`
 
 2. Create AzureAD App
    - Open Azure AD
@@ -26,7 +26,7 @@ Free and open source: [MIT License](https://github.com/Jannos-443/PRTG-M365/blob
 or follow this Guide: [Paessler M365 Credentials](https://kb.paessler.com/en/topic/88462-how-do-i-obtain-credentials-and-set-permissions-for-the-microsoft-365-sensors)
 
 3. Create new Sensor
-   - EXE/Script Advanced = `PRTG-M365-Licences.ps1`
+   - EXE/Script Advanced = `PRTG-M365-Licenses.ps1`
    - Parameter = `-ApplicationID 'Test-APPID' -TenantID 'YourTenantID' -AccessSecret 'Test-AppSecret' -SKUPattern '^(Enterprisepack|EMS|ATP_ENTERPRISE)$'`
 
 4. Set your own Channel limits if needed
@@ -55,10 +55,10 @@ Include all but "O365 E3" (Enterprisepack) and "EMS" (EMS)
 
 Example Output:
 
-![PRTG-M365](media/ok.png)
+![PRTG-M365](media/licenses_ok.png)
 
 
-![PRTG-M365](media/error.png)
+![PRTG-M365](media/licenses_error.png)
 
 
 License translation

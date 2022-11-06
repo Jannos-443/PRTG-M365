@@ -42,7 +42,7 @@
     .EXAMPLE
     Sample call from PRTG EXE/Script Advanced
 
-    "PRTG-M365-Licences.ps1" -ApplicationID 'Test-APPID' -TenantID 'contoso.onmicrosoft.com' -AccessSecret 'Test-AppSecret' -SKUPattern '^(Enterprisepack|EMS|ATP_ENTERPRISE)$'
+    "PRTG-M365-Licenses.ps1" -ApplicationID 'Test-APPID' -TenantID 'contoso.onmicrosoft.com' -AccessSecret 'Test-AppSecret' -SKUPattern '^(Enterprisepack|EMS|ATP_ENTERPRISE)$'
 
     Microsoft 365 Permission:
         1. Open Azure AD
@@ -62,8 +62,8 @@ param(
     [string] $AccessSecret = '',
     [string] $SKUPattern = '',
     [Switch] $exclude,
-    [Switch] $Hide_LicenceCount,
-    [Switch] $Hide_GroupBasedLicence,
+    [Switch] $Hide_LicenseCount,
+    [Switch] $Hide_GroupBasedLicense,
     [Switch] $Hide_LastDirSync
 )
 
@@ -198,44 +198,44 @@ if ($Hide_LastDirSync -eq $false) {
     }
 }
 
-if ($Hide_GroupBasedLicence -eq $false) {
-    #Get groups with licence Error
+if ($Hide_GroupBasedLicense -eq $false) {
+    #Get groups with License Error
     $Result = GraphCall -URL "https://graph.microsoft.com/v1.0/groups?`$filter=hasMembersWithLicenseErrors+eq+true"
 
     #Get license error from group
-    $LicenceErrorCount = 0
-    $LicenceText = "Groups with Licence Errors: "
+    $LicenseErrorCount = 0
+    $LicenseText = "Groups with License Errors: "
     foreach ($group in $Result) {
         $Errors = $null
         $Errors = GraphCall -URL "https://graph.microsoft.com/v1.0/groups/$($group.id)/membersWithLicenseErrors?`$select=licenseAssignmentStates"
         $ErrorByGroup = $Errors.licenseAssignmentStates | Where-Object { $_.assignedByGroup -eq $group.id}
         foreach ($Error in $ErrorByGroup) {
-            $LicenceErrorCount += 1
-            
+            $LicenseErrorCount += 1
+
             if($Error.error) {
                 $ErrorText = $Error.error
             }
             else {
                 $ErrorText = "no error text found"
             }
-            $LicenceText += "group: $($group.displayName) error: $($ErrorText)"
+            $LicenseText += "group: $($group.displayName) error: $($ErrorText)"
         }
     }
-    if ($LicenceErrorCount -gt 0) {
-        $xmlOutput += "<text>$($LicenceText)</text>"
+    if ($LicenseErrorCount -gt 0) {
+        $xmlOutput += "<text>$($LicenseText)</text>"
     }
 
     $xmlOutput += "
     <result>
-    <channel>GroupBasedLicenceError</channel>
-    <value>$($LicenceErrorCount)</value>
+    <channel>GroupBasedLicenseError</channel>
+    <value>$($LicenseErrorCount)</value>
     <unit>Count</unit>
     <limitmode>1</limitmode>
     <LimitMaxError>0</LimitMaxError>
     </result>"
 }
 
-if ($Hide_LicenceCount -eq $false) {
+if ($Hide_LicenseCount -eq $false) {
     $Result = GraphCall -URL "https://graph.microsoft.com/v1.0/subscribedSkus"
 
     #Filter LICs

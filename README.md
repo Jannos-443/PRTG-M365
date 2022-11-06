@@ -11,10 +11,10 @@ PRTG Powershell Scripts to monitor Microsoft 365
 
 ### **Features**
 
-[PRTG-M365-Licences](https://github.com/Jannos-443/PRTG-M365/blob/main/README_Licences.md)
+[PRTG-M365-Licenses](https://github.com/Jannos-443/PRTG-M365/blob/main/README_Licenses.md)
 * Microsoft 365 License usage
 * Last Azure AD Sync
-* Group Based Licencing Error
+* Group Based licensing Error
 
 [PRTG-M365-QuarantineMessages](https://github.com/Jannos-443/PRTG-M365/blob/main/README_QuarantineMessages.md)
 * Monitor Exchange Quarantine Messages
