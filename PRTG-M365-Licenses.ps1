@@ -21,28 +21,42 @@
     .PARAMETER AccessSecret
     Provide the Application Secret
 
-    .PARAMETER exclude
-    true = exclude $SKUPattern SKUs
-    false (default) = only include $SKUPattern SKUs
+    .PARAMETER FriendlyNames
+    Use this switch if you want to display the FriendlyNames and not the SKU Names.
+    With this Switch you are able to use "-IncludeName" and "-ExcludeName" to Include and Exclude based on the friendlynames
 
-    .PARAMETER SKUPattern
-    Regular expression to select the SKUs
+    With this switch the scripts download the translation CSV from Microsoft to translate the stringname to the friendlyname
 
-    without "-exclude"
-        Example: '^(Enterprisepack)$' includes only Enterprisepack (Office 365 E3)
-        Example2: '^(Enterprisepack|EMS)$' includes only Enterprisepack (Office 365 E3) and EMS (Enterprise Mobility + Security)
+    .PARAMETER IncludeName
+    -FriendlyNames required
+    See IncludeSKU but you can use the friendlynames
 
-    with "-exclude"
-        Example: '^(Enterprisepack)$' includes all but Enterprisepack (Office 365 E3)
-        Example2: '^(Enterprisepack|EMS)$' includes all but Enterprisepack (Office 365 E3) and EMS (Enterprise Mobility + Security)
+    .PARAMETER ExcludeName
+    -FriendlyNames required
+    See IncludeSKU but you can use the friendlynames
 
+    .PARAMETER ExcludeSKU
+    See IncludeSKU
+
+    .PARAMETER IncludeSKU
+    Use regular expression to include/exclude based on the stringnames (See Licence Name Link)
+
+    Licence Names: https://docs.microsoft.com/en-us/azure/active-directory/enterprise-users/licensing-service-plan-reference
     Regular Expression: https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_regular_expressions?view=powershell-7.1
-    License Names: https://docs.microsoft.com/en-us/azure/active-directory/enterprise-users/licensing-service-plan-reference
+
+    Examples:
+    -IncludeSKU '^(Enterprisepack)$' includes only Enterprisepack (Office 365 E3)
+    -IncludeSKU '^(Enterprisepack|EMS)$' includes only Enterprisepack (Office 365 E3) and EMS (Enterprise Mobility + Security)
+    -ExcludeSKU '^(Enterprisepack)$' includes all but Enterprisepack (Office 365 E3)
+    -ExcludeSKU '^(Enterprisepack|EMS)$' includes all but Enterprisepack (Office 365 E3) and EMS (Enterprise Mobility + Security)
+
+    .NOTES
+    Version 1.0
 
     .EXAMPLE
     Sample call from PRTG EXE/Script Advanced
 
-    "PRTG-M365-Licenses.ps1" -ApplicationID 'Test-APPID' -TenantID 'contoso.onmicrosoft.com' -AccessSecret 'Test-AppSecret' -SKUPattern '^(Enterprisepack|EMS|ATP_ENTERPRISE)$'
+    "PRTG-M365-Licenses.ps1" -ApplicationID 'Test-APPID' -TenantID 'contoso.onmicrosoft.com' -AccessSecret 'Test-AppSecret' -IncludeSKU '^(Enterprisepack|EMS|ATP_ENTERPRISE)$'
 
     Microsoft 365 Permission:
         1. Open Azure AD
@@ -60,8 +74,11 @@ param(
     [string] $TenantID = '',
     [string] $ApplicationID = '',
     [string] $AccessSecret = '',
-    [string] $SKUPattern = '',
-    [Switch] $exclude,
+    [string] $IncludeSKU = '',
+    [string] $ExcludeSKU = '',
+    [string] $IncludeName = '',
+    [string] $ExcludeName = '',
+    [Switch] $FriendlyNames,
     [Switch] $Hide_LicenseCount,
     [Switch] $Hide_GroupBasedLicense,
     [Switch] $Hide_LastDirSync
@@ -208,11 +225,11 @@ if ($Hide_GroupBasedLicense -eq $false) {
     foreach ($group in $Result) {
         $Errors = $null
         $Errors = GraphCall -URL "https://graph.microsoft.com/v1.0/groups/$($group.id)/membersWithLicenseErrors?`$select=licenseAssignmentStates"
-        $ErrorByGroup = $Errors.licenseAssignmentStates | Where-Object { $_.assignedByGroup -eq $group.id}
+        $ErrorByGroup = $Errors.licenseAssignmentStates | Where-Object { $_.assignedByGroup -eq $group.id }
         foreach ($Error in $ErrorByGroup) {
             $LicenseErrorCount += 1
 
-            if($Error.error) {
+            if ($Error.error) {
                 $ErrorText = $Error.error
             }
             else {
@@ -242,34 +259,83 @@ if ($Hide_LicenseCount -eq $false) {
     #Remove all SKUs with Zero Licenses
     $Result = $Result | Where-Object { $_.consumedUnits -gt 0 }
 
-    #Use Exclude
-    if ($exclude) {
-        if ($SKUPattern -ne "") {
-            $Result = $Result | Where-Object { $_.SKupartnumber -notmatch $SKUPattern }
+    #FriendlyNames are not available via API, but it´s possible to download a csv File to translate them.
+    #https://docs.microsoft.com/en-us/azure/active-directory/enterprise-users/licensing-service-plan-reference
+    if ($FriendlyNames) {
+        $TempFile = New-TemporaryFile -Verbose
+        Invoke-WebRequest -Uri "https://download.microsoft.com/download/e/3/e/e3e9faf2-f28b-490a-9ada-c6089a1fc5b0/Product%20names%20and%20service%20plan%20identifiers%20for%20licensing.csv" -OutFile $TempFile.FullName
+        $LicCSV = Import-Csv -Path $TempFile.FullName -Delimiter ","
+        Start-Sleep -Seconds 1
+        Remove-Item -Path $TempFile.FullName -Verbose
+    }
+
+    $LicList = New-Object System.Collections.ArrayList
+
+    foreach ($R in $Result) {
+        $NewLic = "" | Select-Object "skuId", "skuPartNumber", "FriendlyName", "ConsumedUnits", "PrepaidUnitsEnabled"
+        $NewLic.skuId = $R.skuId
+        $NewLic.skuPartNumber = $R.Skupartnumber
+        $NewLic.ConsumedUnits = $R.ConsumedUnits
+        $NewLic.PrepaidUnitsEnabled = $R.PrepaidUnits.Enabled
+        if ($FriendlyNames) {
+            $NewLic.FriendlyName = $LicCSV | Where-Object { $_.GUID -eq $R.skuId } | Select-Object -First 1 -ExpandProperty Product_Display_Name
+        }
+        $null = $LicList.Add($NewLic)
+    }
+
+    #Include SKU´s
+    if ($IncludeSKU -ne "") {
+        $LicList = $LicList | Where-Object { $_.skuPartNumber -match $IncludeSKU }
+    }
+
+    #Exclude SKU´s
+    if ($ExcludeSKU -ne "") {
+        $LicList = $LicList | Where-Object { $_.skuPartNumber -notmatch $ExcludeSKU }
+    }
+
+    if ($FriendlyNames) {
+        #Include Names
+        if ($IncludeName -ne "") {
+            $LicList = $LicList | Where-Object { $_.FriendlyName -match $IncludeName }
+        }
+
+        #Exclude Names
+        if ($ExcludeName -ne "") {
+            $LicList = $LicList | Where-Object { $_.FriendlyName -notmatch $ExcludeName }
         }
     }
 
-    #Use Include
-    else {
-        if ($SKUPattern -ne "") {
-            $Result = $Result | Where-Object { $_.SKupartnumber -match $SKUPattern }
-        }
-    }
+    foreach ($LIC in $LicList) {
+        if ($FriendlyNames) {
+            $xmlOutput += "
+            <result>
+            <channel>$($LIC.FriendlyName) - Free Licenses</channel>
+            <value>$($LIC.PrepaidUnitsEnabled - $LIC.ConsumedUnits)</value>
+            <unit>Count</unit>
+            </result>
 
-    foreach ($LIC in $Result) {
-        $xmlOutput += "
+            <result>
+            <channel>$($LIC.FriendlyName) - Total Licenses</channel>
+            <value>$($LIC.PrepaidUnitsEnabled)</value>
+            <unit>Count</unit>
+            </result>
+            "
+        }
+        else {
+            $xmlOutput += "
             <result>
             <channel>$($LIC.SkuPartNumber) - Free Licenses</channel>
-            <value>$($LIC.PrepaidUnits.Enabled - $LIC.ConsumedUnits)</value>
+            <value>$($LIC.PrepaidUnitsEnabled - $LIC.ConsumedUnits)</value>
             <unit>Count</unit>
             </result>
 
             <result>
             <channel>$($LIC.SkuPartNumber) - Total Licenses</channel>
-            <value>$($LIC.PrepaidUnits.Enabled)</value>
+            <value>$($LIC.PrepaidUnitsEnabled)</value>
             <unit>Count</unit>
             </result>
             "
+        }
     }
 }
 
