@@ -21,18 +21,18 @@
     .PARAMETER AccessSecret
     Provide the Application Secret
 
-    .PARAMETER FriendlyNames
-    Use this switch if you want to display the FriendlyNames and not the SKU Names.
-    With this Switch you are able to use "-IncludeName" and "-ExcludeName" to Include and Exclude based on the friendlynames
+    .PARAMETER FriendlyName
+    Use this switch if you want to display the friendlynames and not the SKU Names.
+    With this Switch you are able to use "-IncludeName" and "-ExcludeName" to include and exclude based on the friendlynames
 
-    With this switch the scripts download the translation CSV from Microsoft to translate the stringname to the friendlyname
+    At the moment the friendlynames are translatet by an csv downloaded from microsoft, there is no REST API option :(
 
     .PARAMETER IncludeName
-    -FriendlyNames required
+    -FriendlyName required
     See IncludeSKU but you can use the friendlynames
 
     .PARAMETER ExcludeName
-    -FriendlyNames required
+    -FriendlyName required
     See IncludeSKU but you can use the friendlynames
 
     .PARAMETER ExcludeSKU
@@ -78,7 +78,7 @@ param(
     [string] $ExcludeSKU = '',
     [string] $IncludeName = '',
     [string] $ExcludeName = '',
-    [Switch] $FriendlyNames,
+    [Switch] $FriendlyName,
     [Switch] $Hide_LicenseCount,
     [Switch] $Hide_GroupBasedLicense,
     [Switch] $Hide_LastDirSync
@@ -259,9 +259,9 @@ if ($Hide_LicenseCount -eq $false) {
     #Remove all SKUs with Zero Licenses
     $Result = $Result | Where-Object { $_.consumedUnits -gt 0 }
 
-    #FriendlyNames are not available via API, but it´s possible to download a csv File to translate them.
+    #friendlynames/Productnames are not available via API, but it´s possible to download a csv File to translate them.
     #https://docs.microsoft.com/en-us/azure/active-directory/enterprise-users/licensing-service-plan-reference
-    if ($FriendlyNames) {
+    if ($FriendlyName) {
         $TempFile = New-TemporaryFile -Verbose
         Invoke-WebRequest -Uri "https://download.microsoft.com/download/e/3/e/e3e9faf2-f28b-490a-9ada-c6089a1fc5b0/Product%20names%20and%20service%20plan%20identifiers%20for%20licensing.csv" -OutFile $TempFile.FullName
         $LicCSV = Import-Csv -Path $TempFile.FullName -Delimiter ","
@@ -277,7 +277,7 @@ if ($Hide_LicenseCount -eq $false) {
         $NewLic.skuPartNumber = $R.Skupartnumber
         $NewLic.ConsumedUnits = $R.ConsumedUnits
         $NewLic.PrepaidUnitsEnabled = $R.PrepaidUnits.Enabled
-        if ($FriendlyNames) {
+        if ($FriendlyName) {
             $NewLic.FriendlyName = $LicCSV | Where-Object { $_.GUID -eq $R.skuId } | Select-Object -First 1 -ExpandProperty Product_Display_Name
         }
         $null = $LicList.Add($NewLic)
@@ -293,7 +293,7 @@ if ($Hide_LicenseCount -eq $false) {
         $LicList = $LicList | Where-Object { $_.skuPartNumber -notmatch $ExcludeSKU }
     }
 
-    if ($FriendlyNames) {
+    if ($FriendlyName) {
         #Include Names
         if ($IncludeName -ne "") {
             $LicList = $LicList | Where-Object { $_.FriendlyName -match $IncludeName }
@@ -306,7 +306,7 @@ if ($Hide_LicenseCount -eq $false) {
     }
 
     foreach ($LIC in $LicList) {
-        if ($FriendlyNames) {
+        if ($FriendlyName) {
             $xmlOutput += "
             <result>
             <channel>$($LIC.FriendlyName) - Free Licenses</channel>

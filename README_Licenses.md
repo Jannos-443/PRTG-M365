@@ -59,17 +59,17 @@ Include all but "O365 E3" (Enterprisepack) and "EMS" (EMS)
 
 Use FriendlyNames for ChannelNames
 ```powershell
--ApplicationID 'xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' -TenantID 'YourTenantID' -AccessSecret 'YourSecretKey' -FriendlyNames
+-ApplicationID 'xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' -TenantID 'YourTenantID' -AccessSecret 'YourSecretKey' -FriendlyName
 ```
 
 Include only "Office 365 E3"
 ```powershell
-... -FriendlyNames -IncludeName '^(Office 365 E3)$'
+... -FriendlyName -IncludeName '^(Office 365 E3)$'
 ```
 
 Exclude "Office 365 E3"
 ```powershell
-... -FriendlyNames -ExcludeName '^(Office 365 E3)$'
+... -FriendlyName -ExcludeName '^(Office 365 E3)$'
 ```
 
 ## Examples
