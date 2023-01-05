@@ -16,6 +16,9 @@ Free and open source: [MIT License](https://github.com/Jannos-443/PRTG-M365/blob
 - Added FriendlyName Feature
 - Added Ability to use HTTP Push to avoid local Permission on critical Remote Servers (Backup etc.)
 
+## V1.01
+- fixed free license count (issue #6)
+
 ## HOW TO
 
 1. Place `PRTG-M365-Licenses.ps1` under `C:\Program Files (x86)\PRTG Network Monitor\Custom Sensors\EXEXML`

@@ -51,7 +51,7 @@
     -ExcludeSKU '^(Enterprisepack|EMS)$' includes all but Enterprisepack (Office 365 E3) and EMS (Enterprise Mobility + Security)
 
     .NOTES
-    Version 1.0
+    Version 1.01
 
     .EXAMPLE
     Sample call from PRTG EXE/Script Advanced
