@@ -276,7 +276,7 @@ if ($Hide_LicenseCount -eq $false) {
         $NewLic.skuId = $R.skuId
         $NewLic.skuPartNumber = $R.Skupartnumber
         $NewLic.ConsumedUnits = $R.ConsumedUnits
-        $NewLic.PrepaidUnitsEnabled = $R.PrepaidUnits.Enabled
+        $NewLic.PrepaidUnitsEnabled = ($R.PrepaidUnits.enabled + $R.PrepaidUnits.warning + $R.PrepaidUnits.suspended)
         if ($FriendlyName) {
             $NewLic.FriendlyName = $LicCSV | Where-Object { $_.GUID -eq $R.skuId } | Select-Object -First 1 -ExpandProperty Product_Display_Name
         }
