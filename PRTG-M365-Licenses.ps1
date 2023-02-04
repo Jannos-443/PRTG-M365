@@ -278,7 +278,7 @@ if ($Hide_LicenseCount -eq $false) {
         $NewLic.ConsumedUnits = $R.ConsumedUnits
         $NewLic.PrepaidUnitsEnabled = ($R.PrepaidUnits.enabled + $R.PrepaidUnits.warning + $R.PrepaidUnits.suspended)
         if ($FriendlyName) {
-            $NewLic.FriendlyName = $LicCSV | Where-Object { $_.GUID -eq $R.skuId } | Select-Object -First 1 -ExpandProperty Product_Display_Name
+            $NewLic.FriendlyName = $LicCSV | Where-Object { ($_.GUID.Trim()) -eq $R.skuId } | Select-Object -First 1 -ExpandProperty Product_Display_Name
         }
         $null = $LicList.Add($NewLic)
     }
@@ -306,7 +306,7 @@ if ($Hide_LicenseCount -eq $false) {
     }
 
     foreach ($LIC in $LicList) {
-        if ($FriendlyName) {
+        if (($FriendlyName) -and ($null -ne $LIC.FriendlyName)) {
             $xmlOutput += "
             <result>
             <channel>$($LIC.FriendlyName) - Free Licenses</channel>
