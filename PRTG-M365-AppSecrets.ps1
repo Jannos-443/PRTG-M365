@@ -191,6 +191,24 @@ foreach ($SingleResult in $Result) {
     }
 }
 
+#Also monitor SAML Signing certs
+$Result2 = GraphCall -URL " https://graph.microsoft.com/v1.0/serviceprincipals"
+
+    foreach ($SingleResult in $Result2) {
+        if($SingleResult.signInAudience -eq "AzureADMyOrg"){
+            foreach ($passwordCredential in $SingleResult.passwordCredentials) {
+                [datetime]$ExpireTime = $passwordCredential.endDateTime
+                $object = [PSCustomObject]@{
+                    AppDisplayname    = $SingleResult.displayName
+                    SecretDisplayname = $passwordCredential.displayName
+                    Enddatetime       = $ExpireTime
+                    DaysLeft          = ($ExpireTime - (Get-Date)).days
+                }
+                $null = $SecretList.Add($object)
+            }
+        }
+    }
+
 #Region Filter
 #APP
 if ($ExcludeAppName -ne "") {
