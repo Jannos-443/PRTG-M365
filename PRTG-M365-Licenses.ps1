@@ -223,20 +223,11 @@ if ($Hide_GroupBasedLicense -eq $false) {
     $LicenseErrorCount = 0
     $LicenseText = "Groups with License Errors: "
     foreach ($group in $Result) {
-        $Errors = $null
-        $Errors = GraphCall -URL "https://graph.microsoft.com/v1.0/groups/$($group.id)/membersWithLicenseErrors?`$select=licenseAssignmentStates"
-        $ErrorByGroup = $Errors.licenseAssignmentStates | Where-Object { $_.assignedByGroup -eq $group.id }
-        foreach ($Error in $ErrorByGroup) {
-            $LicenseErrorCount += 1
-
-            if ($Error.error) {
-                $ErrorText = $Error.error
-            }
-            else {
-                $ErrorText = "no error text found"
-            }
-            $LicenseText += "group: $($group.displayName) error: $($ErrorText)"
-        }
+        
+        $MembersWithErrors = $null
+        $MembersWithErrors = GraphCall -URL "https://graph.microsoft.com/v1.0/groups/$($group.id)/membersWithLicenseErrors"
+        $LicenseText += "group: $($group.displayName) errors: $($MembersWithErrors.Count); "
+        $LicenseErrorCount += 1
     }
     if ($LicenseErrorCount -gt 0) {
         $xmlOutput += "<text>$($LicenseText)</text>"
