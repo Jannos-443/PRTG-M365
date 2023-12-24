@@ -23,6 +23,16 @@
     .PARAMETER Exclude/Include
     Regular expression to exclude secrets on DisplayName or AppName
 
+    .PARAMETER ProxyAddress
+    Provide a proxy server address if this required to make connections to M365
+    Example: http://proxy.example.com:3128
+
+    .PARAMETER ProxyUser
+    Provide a proxy authentication user if ProxyAddress is used
+
+    .PARAMETER ProxyPassword
+    Provide a proxy authentication password if ProxyAddress is used
+
     Example: ^(PRTG-APP)$
 
     Example2: ^(PRTG-.*|TestApp123)$ excludes PRTG-* and TestApp123
@@ -51,8 +61,35 @@ param(
     [string] $IncludeSecretName = '',
     [string] $ExcludeSecretName = '',
     [string] $IncludeAppName = '',
-    [string] $ExcludeAppName = ''
+    [string] $ExcludeAppName = '',
+    [string] $ProxyAddress = '',
+    [string] $ProxyUser = '',
+    [string] $ProxyPassword = ''
+
 )
+
+# Remove ProxyAddress var if it only contains an empty string or else the Invoke-RestMethod will fail if no proxy address has been provided
+if ($ProxyAddress -eq "") {
+    Remove-Variable ProxyAddress
+}
+
+if (($ProxyAddress -ne "") -and ($ProxyUser -ne "") -and ($ProxyPassword -ne "")) {
+    try {
+        $SecProxyPassword = ConvertTo-SecureString $ProxyPassword -AsPlainText -Force
+        $ProxyCreds = New-Object System.Management.Automation.PSCredential ($ProxyUser, $SecProxyPassword)
+    }
+    catch {
+        Write-Output "<prtg>"
+        Write-Output " <error>1</error>"
+        Write-Output " <text>Error Parsing Proxy Credentials ($($_.Exception.Message))</text>"
+        Write-Output "</prtg>"
+        Exit
+    }
+}
+else {
+    Remove-Variable ProxyCreds
+}
+
 
 #Catch all unhandled Errors
 $ErrorActionPreference = "Stop"
@@ -118,7 +155,7 @@ try {
             Client_Secret = $AccessSecret
         }
 
-        $ConnectGraph = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$TenantID/oauth2/v2.0/token" -Method POST -Body $Body
+        $ConnectGraph = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$TenantID/oauth2/v2.0/token" -Method POST -Body $Body -Proxy $ProxyAddress -ProxyCredential $ProxyCreds
         $token = $ConnectGraph.access_token
         $tokenexpire = (Get-Date).AddSeconds($ConnectGraph.expires_in)
 
@@ -142,11 +179,11 @@ Function GraphCall($URL) {
     try {
         $Headers = @{Authorization = "$($ConnectGraph.token_type) $($ConnectGraph.access_token)" }
         $GraphUrl = $URL
-        $Result_Part = Invoke-RestMethod -Headers $Headers -Uri $GraphUrl -Method Get
+        $Result_Part = Invoke-RestMethod -Headers $Headers -Uri $GraphUrl -Method Get -Proxy $ProxyAddress -ProxyCredential $ProxyCreds
         $Result = $Result_Part.value
         while ($Result_Part.'@odata.nextLink') {
             $graphURL = $Result_Part.'@odata.nextLink'
-            $Result_Part = Invoke-RestMethod -Headers $Headers -Uri $GraphUrl -Method Get
+            $Result_Part = Invoke-RestMethod -Headers $Headers -Uri $GraphUrl -Method Get -Proxy $ProxyAddress -ProxyCredential $ProxyCreds
             $Result = $Result + $Result_Part.value
         }
     }
@@ -161,18 +198,25 @@ Function GraphCall($URL) {
     return $Result
 }
 
-$Result = GraphCall -URL " https://graph.microsoft.com/v1.0/applications"
+$Result = GraphCall -URL "https://graph.microsoft.com/v1.0/applications"
 
 $NextExpiration = 2000
 
 $SecretList = New-Object System.Collections.ArrayList
 
+# Added handling of app secrets that will return either a displayname or a customKeyIdentifier. If one is set the other one is null. As the customKeyIdentifier is a base64 string it will be encoded as UTF8.
 foreach ($SingleResult in $Result) {
     foreach ($passwordCredential in $SingleResult.passwordCredentials) {
         [datetime]$ExpireTime = $passwordCredential.endDateTime
+        if ($passwordCredential.displayName -ne $null) {
+            $SecretDisplayName = $passwordCredential.displayName
+        }
+        else {
+            $SecretDisplayName = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($passwordCredential.customKeyIdentifier))
+        }
         $object = [PSCustomObject]@{
             AppDisplayname    = $SingleResult.displayName
-            SecretDisplayname = $passwordCredential.displayName
+            SecretDisplayname = $SecretDisplayName
             Enddatetime       = $ExpireTime
             DaysLeft          = ($ExpireTime - (Get-Date)).days
         }
@@ -194,20 +238,20 @@ foreach ($SingleResult in $Result) {
 #Also monitor SAML Signing certs
 $Result2 = GraphCall -URL " https://graph.microsoft.com/v1.0/serviceprincipals"
 
-    foreach ($SingleResult in $Result2) {
-        if($SingleResult.signInAudience -eq "AzureADMyOrg"){
-            foreach ($passwordCredential in $SingleResult.passwordCredentials) {
-                [datetime]$ExpireTime = $passwordCredential.endDateTime
-                $object = [PSCustomObject]@{
-                    AppDisplayname    = $SingleResult.displayName
-                    SecretDisplayname = $passwordCredential.displayName
-                    Enddatetime       = $ExpireTime
-                    DaysLeft          = ($ExpireTime - (Get-Date)).days
-                }
-                $null = $SecretList.Add($object)
+foreach ($SingleResult in $Result2) {
+    if ($SingleResult.signInAudience -eq "AzureADMyOrg") {
+        foreach ($passwordCredential in $SingleResult.passwordCredentials) {
+            [datetime]$ExpireTime = $passwordCredential.endDateTime
+            $object = [PSCustomObject]@{
+                AppDisplayname    = $SingleResult.displayName
+                SecretDisplayname = $passwordCredential.displayName
+                Enddatetime       = $ExpireTime
+                DaysLeft          = ($ExpireTime - (Get-Date)).days
             }
+            $null = $SecretList.Add($object)
         }
     }
+}
 
 #Region Filter
 #APP
