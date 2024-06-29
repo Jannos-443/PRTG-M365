@@ -70,7 +70,7 @@ param(
 
 # Remove ProxyAddress var if it only contains an empty string or else the Invoke-RestMethod will fail if no proxy address has been provided
 if ($ProxyAddress -eq "") {
-    Remove-Variable ProxyAddress
+    Remove-Variable ProxyAddress -ErrorAction SilentlyContinue
 }
 
 if (($ProxyAddress -ne "") -and ($ProxyUser -ne "") -and ($ProxyPassword -ne "")) {
