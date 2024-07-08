@@ -65,7 +65,6 @@ param(
     [string] $ProxyAddress = '',
     [string] $ProxyUser = '',
     [string] $ProxyPassword = ''
-
 )
 
 # Remove ProxyAddress var if it only contains an empty string or else the Invoke-RestMethod will fail if no proxy address has been provided
@@ -87,9 +86,8 @@ if (($ProxyAddress -ne "") -and ($ProxyUser -ne "") -and ($ProxyPassword -ne "")
     }
 }
 else {
-    Remove-Variable ProxyCreds
+    Remove-Variable ProxyCreds -ErrorAction SilentlyContinue
 }
-
 
 #Catch all unhandled Errors
 $ErrorActionPreference = "Stop"
@@ -130,21 +128,13 @@ try {
         if ((get-date).AddMinutes(2) -ge $tokenexpire) {
             Write-Host "Token expired or close to expire, going to renew Token"
             $renew = $true
-        }
-
-        else {
+        } else {
             Write-Host "Token found and still valid"
         }
-
-
-    }
-
-    else {
+    } else {
         $renew = $true
         Write-Host "Token not found, going to renew Token"
     }
-
-
 
     if ($renew) {
         #Request Token
@@ -159,10 +149,9 @@ try {
         $token = $ConnectGraph.access_token
         $tokenexpire = (Get-Date).AddSeconds($ConnectGraph.expires_in)
 
-        Write-Host "sucessfully got new MS Graph Token"
+        Write-Host "successfully got new MS Graph Token"
     }
 }
-
 catch {
     Write-Output "<prtg>"
     Write-Output " <error>1</error>"
@@ -183,11 +172,10 @@ Function GraphCall($URL) {
         $Result = $Result_Part.value
         while ($Result_Part.'@odata.nextLink') {
             $graphURL = $Result_Part.'@odata.nextLink'
-            $Result_Part = Invoke-RestMethod -Headers $Headers -Uri $GraphUrl -Method Get -Proxy $ProxyAddress -ProxyCredential $ProxyCreds
+            $Result_Part = Invoke-RestMethod -Headers $Headers -Uri $graphURL -Method Get -Proxy $ProxyAddress -ProxyCredential $ProxyCreds
             $Result = $Result + $Result_Part.value
         }
     }
-
     catch {
         Write-Output "<prtg>"
         Write-Output " <error>1</error>"
@@ -210,8 +198,7 @@ foreach ($SingleResult in $Result) {
         [datetime]$ExpireTime = $passwordCredential.endDateTime
         if ($passwordCredential.displayName -ne $null) {
             $SecretDisplayName = $passwordCredential.displayName
-        }
-        else {
+        } else {
             $SecretDisplayName = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($passwordCredential.customKeyIdentifier))
         }
         $object = [PSCustomObject]@{
@@ -236,7 +223,7 @@ foreach ($SingleResult in $Result) {
 }
 
 #Also monitor SAML Signing certs
-$Result2 = GraphCall -URL " https://graph.microsoft.com/v1.0/serviceprincipals"
+$Result2 = GraphCall -URL "https://graph.microsoft.com/v1.0/serviceprincipals"
 
 foreach ($SingleResult in $Result2) {
     if ($SingleResult.signInAudience -eq "AzureADMyOrg") {
@@ -270,6 +257,13 @@ if ($ExcludeSecretName -ne "") {
 if ($IncludeSecretName -ne "") {
     $SecretList = $SecretList | Where-Object { $_.SecretDisplayname -match $IncludeSecretName }
 }
+
+# Ignore secrets with the value "CWAP_AuthSecret". This is created by default with Azure AD app proxy and working as designed. It rotates keys and needs the last 3 passwords even if expired. https://learn.microsoft.com/en-us/entra/identity/app-proxy/application-proxy-faq
+$SecretList = $SecretList | Where-Object {$_.SecretDisplayname -ne "CWAP_AuthSecret"}
+
+# Ignore secrets with empty value ""
+$SecretList = $SecretList | Where-Object {$_.SecretDisplayname -ne $null}
+
 #End Region Filter
 
 $ListCount = ($SecretList | Measure-Object).Count
