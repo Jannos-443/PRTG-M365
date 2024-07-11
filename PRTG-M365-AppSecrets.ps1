@@ -160,7 +160,9 @@ catch {
     Exit
 }
 
-$xmlOutput = '<prtg>'
+$xmlOutput = '{
+    "prtg": {'
+
 
 #Function Graph API Call
 Function GraphCall($URL) {
@@ -287,35 +289,42 @@ foreach ($Top in $Top5) {
 #Next Expiration
 $NextExpiration = ($SecretList | Select-Object -First 1).DaysLeft
 
-$xmlOutput += "<result>
-<channel>Next Cert Expiration</channel>
-<value>$($NextExpiration)</value>
-<unit>Custom</unit>
-<CustomUnit>Days</CustomUnit>
-<LimitMode>1</LimitMode>
-<LimitMinWarning>30</LimitMinWarning>
-<LimitMinError>10</LimitMinError>
-</result>"
+$xmlOutput += "
+    `"result`": [
+        {
+            `"channel`": `"Next Cert Expiration`",
+            `"value`": `"$($NextExpiration)`",
+            `"unit`": `"custom`",
+            `"customunit`": `"Days`",
+            `"LimitMode`": `"1`",
+            `"LimitMinWarning`": `"30`",
+            `"LimitMinError`": `"10`"  
+        },"
 
 $Less90Days = ($SecretList | Where-Object { $_.DaysLeft -le 90 } | Measure-Object).count
 $Less180Days = ($SecretList | Where-Object { $_.DaysLeft -le 180 } | Measure-Object).count
 
-$xmlOutput += "<result>
-<channel>less than 90 days left</channel>
-<value>$($Less90Days)</value>
-<unit>Count</unit>
-</result>
-<result>
-<channel>less than 180 days left</channel>
-<value>$($Less180Days)</value>
-<unit>Count</unit>
-</result>"
+$xmlOutput += "
+        {
+            `"channel`": `"less than 90 days left`",
+            `"value`": `"$($Less90Days)`",
+            `"unit`": `"Count`"  
+        },
+        {
+            `"channel`": `"less than 180 days left`",
+            `"value`": `"$($Less180Days)`",
+            `"unit`": `"Count`"  
+        }"
 
 $OutputText = $OutputText.Replace("<", "")
 $OutputText = $OutputText.Replace(">", "")
 $OutputText = $OutputText.Replace("#", "")
-$xmlOutput = $xmlOutput + "<text>$($OutputText)</text>"
+$OutputText = $OutputText.Replace("`'", "")
+$xmlOutput += "
 
-$xmlOutput = $xmlOutput + "</prtg>"
+    ],
+    `"text`": `"$($OutputText.Replace('`"',"`'"))`"
+    }
+}"
 
 $xmlOutput
