@@ -121,12 +121,12 @@ try {
 
     if ($ConnectGraph) {
         if ((get-date).AddMinutes(2) -ge $tokenexpire) {
-            Write-Host "Token expired or close to expire, going to renew Token"
+            #Write-Host "Token expired or close to expire, going to renew Token"
             $renew = $true
         }
 
         else {
-            Write-Host "Token found and still valid"
+            #Write-Host "Token found and still valid"
         }
 
 
@@ -134,7 +134,7 @@ try {
 
     else {
         $renew = $true
-        Write-Host "Token not found, going to renew Token"
+        #Write-Host "Token not found, going to renew Token"
     }
 
 
