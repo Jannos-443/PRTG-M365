@@ -152,7 +152,7 @@ try {
         $token = $ConnectGraph.access_token
         $tokenexpire = (Get-Date).AddSeconds($ConnectGraph.expires_in)
 
-        Write-Host "sucessfully got new MS Graph Token"
+        #Write-Host "sucessfully got new MS Graph Token"
     }
 }
 
