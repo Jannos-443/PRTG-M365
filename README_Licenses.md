@@ -12,11 +12,11 @@ Free and open source: [MIT License](https://github.com/Jannos-443/PRTG-M365/blob
 * Group Based Licensing Error
 
 ## Changelog
-### V1.0
+V1.0
 - Added FriendlyName Feature
 - Added Ability to use HTTP Push to avoid local Permission on critical Remote Servers (Backup etc.)
 
-## V1.01
+V1.01
 - fixed free license count (issue #6)
 
 ## HOW TO
