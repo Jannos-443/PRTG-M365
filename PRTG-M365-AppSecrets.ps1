@@ -126,14 +126,14 @@ try {
 
     if ($ConnectGraph) {
         if ((get-date).AddMinutes(2) -ge $tokenexpire) {
-            Write-Host "Token expired or close to expire, going to renew Token"
+            #Write-Host "Token expired or close to expire, going to renew Token"
             $renew = $true
         } else {
-            Write-Host "Token found and still valid"
+            #Write-Host "Token found and still valid"
         }
     } else {
         $renew = $true
-        Write-Host "Token not found, going to renew Token"
+        #Write-Host "Token not found, going to renew Token"
     }
 
     if ($renew) {
@@ -149,7 +149,7 @@ try {
         $token = $ConnectGraph.access_token
         $tokenexpire = (Get-Date).AddSeconds($ConnectGraph.expires_in)
 
-        Write-Host "successfully got new MS Graph Token"
+        #Write-Host "successfully got new MS Graph Token"
     }
 }
 catch {
@@ -160,7 +160,8 @@ catch {
     Exit
 }
 
-$xmlOutput = '<prtg>'
+$xmlOutput = '<?xml version="1.0" encoding="UTF-8" ?>
+<prtg>'
 
 #Function Graph API Call
 Function GraphCall($URL) {
@@ -314,6 +315,7 @@ $OutputText = $OutputText.Replace("<", "")
 $OutputText = $OutputText.Replace(">", "")
 $OutputText = $OutputText.Replace("#", "")
 $OutputText = $OutputText.Replace("`"", "")
+$OutputText = $OutputText.Substring(0,1900)
 
 $xmlOutput += "<text>$($OutputText)</text>"
 
