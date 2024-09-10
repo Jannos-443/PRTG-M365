@@ -315,7 +315,9 @@ $OutputText = $OutputText.Replace("<", "")
 $OutputText = $OutputText.Replace(">", "")
 $OutputText = $OutputText.Replace("#", "")
 $OutputText = $OutputText.Replace("`"", "")
-$OutputText = $OutputText.Substring(0,1900)
+if ($OutputText.Length -gt 1900) {
+    $OutputText = $OutputText.Substring(0, 1900)
+}
 
 $xmlOutput += "<text>$($OutputText)</text>"
 
