@@ -20,8 +20,29 @@
     .PARAMETER AccessSecret
     Provide the Application Secret
 
-    .PARAMETER Exclude/Include
-    Regular expression to exclude secrets on DisplayName or AppName
+    .PARAMETER IncludeSecretName
+    Regular expression to exclude/include secrets on DisplayName or AppName
+    Example: ^(PRTG-APP)$ = matches "PRTG-APP" but not "PRTG-APP1"
+    Example2: ^(PRTG-.*|TestApp123)$ matches "PRTG-*" and "TestApp123"
+    #https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_regular_expressions?view=powershell-7.1
+
+    .PARAMETER ExcludeSecretName
+    Regular expression to exclude/include secrets on DisplayName or AppName
+    Example: ^(PRTG-APP)$ = matches "PRTG-APP" but not "PRTG-APP1"
+    Example2: ^(PRTG-.*|TestApp123)$ matches "PRTG-*" and "TestApp123"
+    #https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_regular_expressions?view=powershell-7.1
+
+    .PARAMETER IncludeAppName
+    Regular expression to exclude/include secrets on DisplayName or AppName
+    Example: ^(PRTG-APP)$ = matches "PRTG-APP" but not "PRTG-APP1"
+    Example2: ^(PRTG-.*|TestApp123)$ matches "PRTG-*" and "TestApp123"
+    #https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_regular_expressions?view=powershell-7.1
+
+    .PARAMETER ExcludeAppName
+    Regular expression to exclude/include secrets on DisplayName or AppName
+    Example: ^(PRTG-APP)$ = matches "PRTG-APP" but not "PRTG-APP1"
+    Example2: ^(PRTG-.*|TestApp123)$ matches "PRTG-*" and "TestApp123"
+    #https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_regular_expressions?view=powershell-7.1
 
     .PARAMETER ProxyAddress
     Provide a proxy server address if this required to make connections to M365
@@ -32,12 +53,6 @@
 
     .PARAMETER ProxyPassword
     Provide a proxy authentication password if ProxyAddress is used
-
-    Example: ^(PRTG-APP)$
-
-    Example2: ^(PRTG-.*|TestApp123)$ excludes PRTG-* and TestApp123
-
-    #https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_regular_expressions?view=powershell-7.1
 
     .EXAMPLE
     Sample call from PRTG EXE/Script Advanced
@@ -64,7 +79,8 @@ param(
     [string] $ExcludeAppName = '',
     [string] $ProxyAddress = '',
     [string] $ProxyUser = '',
-    [string] $ProxyPassword = ''
+    [string] $ProxyPassword = '',
+    [switch] $debug
 )
 
 # Remove ProxyAddress var if it only contains an empty string or else the Invoke-RestMethod will fail if no proxy address has been provided
@@ -126,14 +142,22 @@ try {
 
     if ($ConnectGraph) {
         if ((get-date).AddMinutes(2) -ge $tokenexpire) {
-            #Write-Host "Token expired or close to expire, going to renew Token"
+            if ($debug) {
+                Write-Host "Token expired or close to expire, going to renew Token"
+            }
             $renew = $true
-        } else {
-            #Write-Host "Token found and still valid"
         }
-    } else {
+        else {
+            if ($debug) {
+                Write-Host "Token found and still valid"
+            }
+        }
+    }
+    else {
         $renew = $true
-        #Write-Host "Token not found, going to renew Token"
+        if ($debug) {
+            Write-Host "Token not found, going to renew Token"
+        }
     }
 
     if ($renew) {
@@ -148,8 +172,9 @@ try {
         $ConnectGraph = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$TenantID/oauth2/v2.0/token" -Method POST -Body $Body -Proxy $ProxyAddress -ProxyCredential $ProxyCreds
         $token = $ConnectGraph.access_token
         $tokenexpire = (Get-Date).AddSeconds($ConnectGraph.expires_in)
-
-        #Write-Host "successfully got new MS Graph Token"
+        if ($debug) {
+            Write-Host "successfully got new MS Graph Token"
+        }
     }
 }
 catch {
@@ -197,10 +222,11 @@ $SecretList = New-Object System.Collections.ArrayList
 foreach ($SingleResult in $Result) {
     foreach ($passwordCredential in $SingleResult.passwordCredentials) {
         [datetime]$ExpireTime = $passwordCredential.endDateTime
-        if ($passwordCredential.displayName -ne $null) {
+        if ($null -ne $passwordCredential.displayName) {
             $SecretDisplayName = $passwordCredential.displayName
-        } else {
-            $SecretDisplayName = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($passwordCredential.customKeyIdentifier))
+        }
+        else {
+            $SecretDisplayName = "empty"
         }
         $object = [PSCustomObject]@{
             AppDisplayname    = $SingleResult.displayName
@@ -260,10 +286,10 @@ if ($IncludeSecretName -ne "") {
 }
 
 # Ignore secrets with the value "CWAP_AuthSecret". This is created by default with Azure AD app proxy and working as designed. It rotates keys and needs the last 3 passwords even if expired. https://learn.microsoft.com/en-us/entra/identity/app-proxy/application-proxy-faq
-$SecretList = $SecretList | Where-Object {$_.SecretDisplayname -ne "CWAP_AuthSecret"}
+$SecretList = $SecretList | Where-Object { $_.SecretDisplayname -ne "CWAP_AuthSecret" }
 
 # Ignore secrets with empty value ""
-$SecretList = $SecretList | Where-Object {$_.SecretDisplayname -ne $null}
+$SecretList = $SecretList | Where-Object { $_.SecretDisplayname -ne $null }
 
 #End Region Filter
 
